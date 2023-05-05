@@ -1,3 +1,5 @@
+.gitignore
 *.ipynb
 *.json
-./test/*
+./*/*
+!./global_utils/*
