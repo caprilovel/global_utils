@@ -1,6 +1,3 @@
-import sys,os,time
-from datetime import datetime 
-import pytz
 from email.mime.multipart import MIMEMultipart
 import smtplib
 from email.mime.text import MIMEText
@@ -9,47 +6,6 @@ from email.mime.image import MIMEImage
 # 负责将多个对象集合起来
 from email.mime.multipart import MIMEMultipart
 from email.header import Header
-
-
-def mkdir(path):
-    folder = os.path.exists(path)
-    if not folder:
-        os.makedirs(path)
-
-class Logger(object):
-    def __init__(self, logFile='./Default.log'):
-        self.terminal = sys.stdout
-        self.log = open(logFile, 'a')
-        self.close_flag = False
-    
-    def write(self, message):
-        self.terminal.write(message)
-        if self.close_flag is False:
-            self.log.write(message)
-    
-    def flush(self):
-        pass
-    
-    def close(self):
-        self.log.close()
-        self.close_flag = True
-
-def get_time_str(style='Nonetype'):
-    t = time.localtime()
-    if style is 'Nonetype':
-        return ("{}{}{}{}{}{}".format(t.tm_year, t.tm_mon, t.tm_mday, t.tm_hour, t.tm_min, t.tm_sec))
-    elif style is 'underline':
-        return ("{}_{}_{}_{}_{}_{}".format(t.tm_year, t.tm_mon, t.tm_mday, t.tm_hour, t.tm_min, t.tm_sec))
-
-
-
-
-def timestamp():
-    time_format = '%Y%m%d%H%M'
-    timer = datetime.now(pytz.timezone('Asia/Shanghai')).strftime(time_format)
-    return timer
-
-
 
 class EmailSender:
     def __init__(self, title="Message"):
@@ -115,3 +71,8 @@ class EmailSender:
     
     def change_recerivers(self, new_receivers):
         self.mail_receivers = new_receivers
+
+if __name__ == "__main__":
+    es = EmailSender()
+    es.get_text("test")
+    es.send()

@@ -7,18 +7,26 @@ import os
 import random
 
 
+class Residual(nn.Module):
+    def __init__(self, fn, res_mode='add') -> None:
+        super().__init__()
+        self.fn = fn
+        self.mode = res_mode
+        
+    def forward(self, x, *args, **kwargs):
+        if self.mode == "add":
+            return self.fn(x, *args, **kwargs) + x
+        elif self.mode == "cat":
+            return torch.cat([x, self.fn(x, *args, **kwargs)], dim=0)
+
 class SE_block1d(nn.Module):
     def __init__(self, channels, hidden_size=None, act_layer=nn.ReLU):
         super(SE_block1d, self).__init__()
         self.hidden_size = hidden_size or channels
-    
-        
         self.avg = nn.AdaptiveAvgPool1d(1)
         self.linear1 = nn.Linear(channels, hidden_size)
         self.linear2 = nn.Linear(hidden_size, channels)
         self.act_layer = act_layer()
-        
-        
         
     def forward(self, x):
         y = self.avg(x).squeeze(-1)
@@ -28,10 +36,6 @@ class SE_block1d(nn.Module):
         y = self.act_layer(y)
         y = F.softmax(y, -1).unsqueeze(-1)
         return x * y
-
-
-
-
 
 #-----------------------------------------------------------#
 

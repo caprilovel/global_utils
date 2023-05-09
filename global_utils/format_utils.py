@@ -1,3 +1,5 @@
+import torch 
+from einops import rearrange, reduce, repeat
 import yaml, json
 import os 
 
@@ -20,3 +22,12 @@ def read_yaml_to_dict(yaml_path):
     with open(yaml_path) as file:
         dict_value = yaml.load(file.read(), Loader=yaml.FullLoader)
         return dict_value
+    
+def str2bool(s:str)->bool:
+    return s.lower().strip() == 'true'
+
+def boolean_string(s):
+    if s not in {'False', 'True'}:
+        raise ValueError('Not a valid boolean string')
+    return s == 'True'
+

@@ -16,7 +16,16 @@ def socket_port(ip, port):
     return True
 
 def find_container(container_name):
-    
+    """find_container find docker container exist or not
+
+    Using docker inspect to find container exist or not. if find a container, docker inspect would return a long string, at least 100, otherwise return a short string.
+
+    Args:
+        container_name (_type_): _description_
+
+    Returns:
+        _type_: _description_
+    """
     p = subprocess.Popen(f"docker inspect {container_name}", shell=True, stdout=subprocess.PIPE,stderr=subprocess.PIPE)
     out = p.stdout.read()
     if len(str(out)) < 100:
