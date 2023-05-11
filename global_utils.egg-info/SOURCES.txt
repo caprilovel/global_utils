@@ -1,9 +1,10 @@
 setup.py
 global_utils/activatefunc.py
+global_utils/crawler.py
+global_utils/ffmpyeg.py
 global_utils/find_gpus.py
 global_utils/format_utils.py
 global_utils/log_utils.py
-global_utils/mail.py
 global_utils/notebook_create.py
 global_utils/submodels.py
 global_utils/torch_utils.py

@@ -8,19 +8,41 @@ import random
 
 
 class Residual(nn.Module):
+    '''
+    A simple residual module that adds a residual connection to the module.
+    
+    Example of use:
+    >>> model = nn.Conv1d(1,1,3)
+    >>> res_model = Residual(model)
+    '''
     def __init__(self, fn, res_mode='add') -> None:
+        '''
+        fn: nn.Module, the module to be added residual connection
+        res_mode: str, the mode of residual connection, 'add' or 'cat'
+        '''
         super().__init__()
         self.fn = fn
         self.mode = res_mode
         
     def forward(self, x, *args, **kwargs):
+        '''
+        x: torch.Tensor, the input tensor
+        '''
         if self.mode == "add":
             return self.fn(x, *args, **kwargs) + x
         elif self.mode == "cat":
             return torch.cat([x, self.fn(x, *args, **kwargs)], dim=0)
 
 class SE_block1d(nn.Module):
+    '''
+    Squeeze-and-Excitation block for 1d data.
+    '''
     def __init__(self, channels, hidden_size=None, act_layer=nn.ReLU):
+        '''
+        channels: Int, the numbers of the input channels
+        hidden_size: Int, the numbers of the hidden channels
+        act_layer: nn.Module, the activation layer
+        '''
         super(SE_block1d, self).__init__()
         self.hidden_size = hidden_size or channels
         self.avg = nn.AdaptiveAvgPool1d(1)
@@ -29,6 +51,9 @@ class SE_block1d(nn.Module):
         self.act_layer = act_layer()
         
     def forward(self, x):
+        '''
+        x: torch.Tensor, the input tensor
+        '''
         y = self.avg(x).squeeze(-1)
         y = self.linear1(y)
         y = self.act_layer(y)
@@ -36,6 +61,54 @@ class SE_block1d(nn.Module):
         y = self.act_layer(y)
         y = F.softmax(y, -1).unsqueeze(-1)
         return x * y
+
+class SKMultiScaleConv1dBlock(nn.Module):
+    '''
+    Multi-scale 1d convolution block. Using SKBlock to replace the original convolution block.
+    
+    '''
+    def __init__(self, in_channels, out_channels, rate, input_scales = [3,5,7,11,13]):
+        '''
+        多尺度一元时序卷积模块
+        Multiscale conv1d sequential convolution module
+        INPUT:
+        in_channels: Int, the numbers of the input channels 
+        out_channels: Int, the numbers of the out channels 
+        input_scales: List, the kernel size of the convolution layers
+        rate: Float, the rate of the out channels
+        '''
+        super().__init__()
+        min_length = 32
+        self.scales = len(input_scales)
+        self.conv_array = nn.ModuleList()
+        self.linear_array = []
+        z_channels = max(min_length, int(rate * out_channels))
+        self.gap = nn.AdaptiveAvgPool1d(1)
+        self.bn = nn.BatchNorm1d(out_channels)
+        self.linear_sum = nn.Linear(out_channels, z_channels)
+        self.linear_split = nn.Linear(z_channels, self.scales * out_channels)        
+        for i in input_scales:
+            self.conv_array.append(nn.Conv1d(in_channels, out_channels,kernel_size=i, padding=(i-1)//2))
+            
+
+    def forward(self, x):
+        N = x.size(0)
+        y = []
+        for conv in self.conv_array:
+            y.append(torch.unsqueeze(conv(x), dim=1))
+        y_cat = torch.cat(y, dim=1)
+        y_sum = torch.sum(y_cat, dim=1)
+        gap = self.gap(y_sum)
+        output = self.bn(self.linear_sum(gap))
+        split = self.linear_split(output)
+        split = torch.reshape(split, (N, self.scales, -1))
+        split = F.softmax(split, dim=1)
+        split = torch.unsqueeze(split, dim=3)
+        return torch.sum(split * y_cat, dim=1)
+
+class SKblock1d(nn.Module):
+    def __init__(self) -> None:
+        super().__init__()
 
 #-----------------------------------------------------------#
 

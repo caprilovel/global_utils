@@ -115,3 +115,14 @@ class EmailSender:
     
     def change_recerivers(self, new_receivers):
         self.mail_receivers = new_receivers
+        
+def easymail(filepath):
+    import os
+    em = EmailSender()
+    try :
+        with open(filepath, 'r') as f:
+            em.get_text(" ".join(f.readlines()))
+            em.send()
+    except Exception as e:
+        print(e)
+    
