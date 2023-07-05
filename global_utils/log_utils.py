@@ -16,6 +16,18 @@ def mkdir(path):
     if not folder:
         os.makedirs(path)
 
+def get_time_str(style='Nonetype'):
+    t = time.localtime()
+    if style is 'Nonetype':
+        return ("{}{}{}{}{}{}".format(t.tm_year, t.tm_mon, t.tm_mday, t.tm_hour, t.tm_min, t.tm_sec))
+    elif style is 'underline':
+        return ("{}_{}_{}_{}_{}_{}".format(t.tm_year, t.tm_mon, t.tm_mday, t.tm_hour, t.tm_min, t.tm_sec))
+    
+def timestamp():
+    time_format = '%Y%m%d%H%M%S'
+    timer = datetime.now(pytz.timezone('Asia/Shanghai')).strftime(time_format)
+    return timer
+
 class Logger(object):
     def __init__(self, logFile='./Default.log'):
         self.terminal = sys.stdout
@@ -33,22 +45,6 @@ class Logger(object):
     def close(self):
         self.log.close()
         self.close_flag = True
-
-def get_time_str(style='Nonetype'):
-    t = time.localtime()
-    if style is 'Nonetype':
-        return ("{}{}{}{}{}{}".format(t.tm_year, t.tm_mon, t.tm_mday, t.tm_hour, t.tm_min, t.tm_sec))
-    elif style is 'underline':
-        return ("{}_{}_{}_{}_{}_{}".format(t.tm_year, t.tm_mon, t.tm_mday, t.tm_hour, t.tm_min, t.tm_sec))
-
-
-
-
-def timestamp():
-    time_format = '%Y%m%d%H%M'
-    timer = datetime.now(pytz.timezone('Asia/Shanghai')).strftime(time_format)
-    return timer
-
 
 
 class EmailSender:
@@ -125,4 +121,9 @@ def easymail(filepath):
             em.send()
     except Exception as e:
         print(e)
+    
+# def save_model(model, path, **kwargs):
+#     ts = timestamp()
+#     save_path = os.path.join(path, ts, )
+    
     

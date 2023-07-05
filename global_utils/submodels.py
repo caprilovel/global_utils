@@ -6,6 +6,43 @@ from einops import reduce, rearrange
 import os
 import random
 
+class PointwiseConv1d(nn.Module):
+    def __init__(self, in_channels, out_channels, bias=True):
+        super().__init__()
+        self.conv = nn.Conv1d(in_channels, out_channels, 1, bias=bias)
+        
+    def forward(self, x):
+        return self.conv(x)
+    
+class DepthwiseConv1d(nn.Module):
+    def __init__(self, in_channels, out_channels, kernel_size, padding=None, bias=True):
+        super().__init__()
+        self.conv = nn.Conv1d(in_channels, out_channels, kernel_size, padding=padding, groups=in_channels, bias=bias)
+        
+    def forward(self, x):
+        return self.conv(x)
+    
+class PartialConv1d(nn.Module):
+    '''
+    from paper 'Run, Don’t Walk: Chasing Higher FLOPS for Faster Neural Networks' 
+    To reduce feature redundancy and increase computational speed, this module is compose of a small channel convolution and a pointwise convolution
+    '''
+    def __init__(self, in_channels, out_channels, kernel_size, trate=0.25, actv=nn.Identity) -> None:
+        super().__init__()
+        self.p_channels = int(in_channels * trate)
+        padding = (kernel_size - 1) // 2
+        self.partconv = nn.Conv1d(self.p_channels, self.p_channels, kernel_size, padding=padding)
+        self.actv = actv()
+        self.pwconv = PointwiseConv1d(in_channels, out_channels)
+        
+    def forward(self, x):
+        B,C,L = x.shape
+        x_p = x[:, :self.p_channels, :]
+        x_r = x[:, self.p_channels:, :]
+        x_p = self.actv(self.partconv(x_p))
+        x = torch.cat([x_p, x_r], dim=1)
+        return self.pwconv(x)
+        
 
 class Residual(nn.Module):
     '''
