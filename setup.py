@@ -4,7 +4,7 @@ from setuptools import setup, find_packages
 # 修改版本号来进行更换版本
 setup(
     name='global_utils',
-    version='0.0.3',
+    version='0.0.4',
     description='Global Utils',
     author='Capri',
 ) 

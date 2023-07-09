@@ -18,6 +18,54 @@ import torch
 from sklearn.metrics import accuracy_score, f1_score
 import sys
 import time 
+
+
+
+
+def fuzzy_find(string, List, mode='single'):
+    '''
+    find element/elements in List which contain string
+    ''' 
+    import re
+    res = []
+    for i in range(len(List)):
+        if re.search(string, List[i]):
+            res.append(i)
+    if mode == 'single':
+        if len(res) == 0:
+            return None
+        elif len(res) == 1:
+            return res[0]
+        else:
+            raise ValueError('more than one element contain string')
+    elif mode == 'multi':
+        return res
+    else:
+        raise ValueError('mode must be single or multi')
+    
+
+
+def fuzzy_find_prefix(string, List, mode='single'):
+    '''
+    find element/elements in List which start with string
+    '''
+    res = []
+    for i in range(len(List)):
+        if List[i].startswith(string):
+            res.append(i)
+    if mode == 'single':
+        if len(res) == 0:
+            return None
+        elif len(res) == 1:
+            return res[0]
+        else:
+            raise ValueError('more than one element contain string')
+    elif mode == 'multi':
+        return res
+    else:
+        raise ValueError('mode must be single or multi')
+    
+    
 #-----------------------------------------------------------#
 
 #   label_select,用于样本不均衡的数据集，每一次的输入样本为每一类相同数目的样本
@@ -49,11 +97,18 @@ def label_select(labels, sampling):
         sample_list.append(class_dict[i][0:sampling])
     return np.concatenate(np.array(sample_list))
 
-def predict (output):
+def tensor_predict(output):
     '''
     输入为batch * 预测向量,返回batch * 预测结果
+    output: tensor, size is (batch, num_classes)
     '''
     return output.max(1)[1].cpu().numpy()
+
+def numpy_predict(output_ndarray):
+    '''
+    output_ndarray: ndarray, size is (batch, num_classes), is the output of model 
+    '''
+    return np.argmax(output_ndarray, axis=1)
 
 def save_confusion_matrix(cm, path, title=None, labels_name=None,   cmap=plt.cm.Blues):
 
