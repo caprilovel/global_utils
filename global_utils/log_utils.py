@@ -108,17 +108,19 @@ class EmailSender:
         except smtplib.SMTPException as e:
             print("error", e)
     
-    
     def change_recerivers(self, new_receivers):
         self.mail_receivers = new_receivers
         
+    def send_on_exit(self, *args, **kwargs):
+        import atexit
+        atexit.register(self.send)
 def easymail(filepath):
     import os
     em = EmailSender()
     try :
         with open(filepath, 'r') as f:
             em.get_text(" ".join(f.readlines()))
-            em.send()
+            em.send_on_exit()
     except Exception as e:
         print(e)
     

@@ -1,4 +1,5 @@
 import argparse
+from typing import Any
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
@@ -16,6 +17,9 @@ class MyOnehot():
     def __init__(self, labels):
         self.labels = np.unique(labels)
         self.onehot_matrix = np.eye(len(self.labels))
+        
+    def __call__(self, input) -> Any:
+        return self.transform(input)
         
     def transform(self, input):
         # print(self.labels.shape, input.shape)
@@ -73,3 +77,30 @@ def ratio_or_exact(value, fuzzy_ratio):
     '''
     return int(value * fuzzy_ratio) if isinstance(fuzzy_ratio, float) else fuzzy_ratio
 
+
+def alignment_add(tensor1, tensor2, alignment_opt='trunc'):
+    '''add with auto-alignment
+    
+    Using for the transpose convolution. Transpose convolution will cause the size of the output uncertain. However, in the unet structure, the size of the output should be the same as the input. So, we need to align the size of the output with the input.
+    
+    Args:
+        tensor1: the first tensor
+        tensor2: the second tensor, only the last dim is not same as the first tensor
+        alignment_opt: the alignment option, can be 'trunc' or 'padding'
+    
+    Examples:
+        >>> tensor1 = torch,randn(1, 2, 3)
+        >>> tensor2 = torch.randn(1, 2, 4)
+        >>> tensor3 = alignment_add(tensor1, tensor2)
+        >>> tensor3.shape 
+        torch.Size([1, 2, 3])
+    
+    '''
+    
+    assert tensor1.shape[0:-1] == tensor2.shape[0:-1], 'the shape of the first tensor should be the same as the second tensor'
+    short_tensor = tensor1 if tensor1.shape[-1] < tensor2.shape[-1] else tensor2
+    long_tensor = tensor1 if tensor1.shape[-1] >= tensor2.shape[-1] else tensor2
+    if alignment_opt == 'trunc':
+        return short_tensor + long_tensor[..., :short_tensor.shape[-1]]
+    elif alignment_opt == 'padding':
+        return long_tensor + F.pad(short_tensor, (0, long_tensor.shape[-1] - short_tensor.shape[-1]))
