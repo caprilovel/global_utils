@@ -11,6 +11,44 @@ from email.mime.multipart import MIMEMultipart
 from email.header import Header
 
 
+def print_args(func):
+    """wrapper for print args and kwargs
+
+    Args:
+        func (_type_): function
+        
+    Examples:
+        >>> @print_args
+        >>> def test(a,b,c):
+        >>>    pass
+        >>> test(1,2,3)
+        -------------test KWArgs---------------
+        a: 1
+        b: 2
+        c: 3
+        -------------test Args---------------
+    """
+    def wrapper(*args, **kwargs):
+        print("-------------{} KWArgs---------------".format(func.__name__))
+        for k,v in kwargs.items():
+            print("{}: {}".format(k,v))
+        print("-------------{} Args---------------".format(func.__name__))
+        return func(*args, **kwargs)
+    return wrapper
+
+def torch_log_decorator(func):
+    def wrapper(*args, **kwargs):
+        from torch.utils.tensorboard import SummaryWriter
+        # 创建SummaryWriter对象，指定日志保存路径
+        writer = SummaryWriter(log_dir="./logs")
+        result = func(*args, **kwargs)
+        # 在训练过程中记录日志
+        writer.add_scalar("loss", result["loss"], global_step=result["step"])
+        writer.add_scalar("accuracy", result["accuracy"], global_step=result["step"])
+        writer.close()
+        return result
+    return wrapper
+
 def mkdir(path):
     folder = os.path.exists(path)
     if not folder:
