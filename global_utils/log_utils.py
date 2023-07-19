@@ -230,4 +230,25 @@ def easymail(filepath):
             em.send_on_exit()
     except Exception as e:
         print(e)    
-    
+
+def save_to_yaml(path):
+    import yaml
+    import functools
+    def decorator(func):
+        @functools.wraps(func)
+        def wrapper(*args, **kwargs):
+            result = func(*args, **kwargs)
+            
+            params = {
+                'args': args,
+                'kwargs': kwargs,
+                'result': result
+            }
+
+            # 将参数字典保存为 YAML 文件
+            with open(path, 'w') as file:
+                yaml.dump(params, file)
+
+            return result
+        return wrapper
+    return decorator
