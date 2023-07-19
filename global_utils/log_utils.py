@@ -37,6 +37,11 @@ def print_args(func):
     return wrapper
 
 def torch_log_decorator(func):
+    """decorator for torch log
+
+    Args:
+        func : function to be decorated, should return a dict with key "loss" and "accuracy"
+    """
     def wrapper(*args, **kwargs):
         from torch.utils.tensorboard import SummaryWriter
         # 创建SummaryWriter对象，指定日志保存路径
@@ -50,11 +55,26 @@ def torch_log_decorator(func):
     return wrapper
 
 def mkdir(path):
+    """mkdir if not exists
+
+    python's mkdir.
+    
+    Args:
+        path (str): path to be mkdir
+    """
     folder = os.path.exists(path)
     if not folder:
         os.makedirs(path)
 
 def get_time_str(style='Nonetype'):
+    """An easy way to get time string
+
+    Args:
+        style (str, optional): Nonetype or underline. Defaults to 'Nonetype'.
+
+    Returns:
+        str : time string
+    """
     t = time.localtime()
     if style is 'Nonetype':
         return ("{}{}{}{}{}{}".format(t.tm_year, t.tm_mon, t.tm_mday, t.tm_hour, t.tm_min, t.tm_sec))
@@ -62,11 +82,21 @@ def get_time_str(style='Nonetype'):
         return ("{}_{}_{}_{}_{}_{}".format(t.tm_year, t.tm_mon, t.tm_mday, t.tm_hour, t.tm_min, t.tm_sec))
     
 def timestamp():
+    """An better way to get time string, especially in China
+
+    Returns:
+        str: time string
+    """
     time_format = '%Y%m%d%H%M%S'
     timer = datetime.now(pytz.timezone('Asia/Shanghai')).strftime(time_format)
     return timer
 
 class Logger(object):
+    """A class for logging
+
+    Args:
+        object (_type_): _description_
+    """
     def __init__(self, logFile='./Default.log'):
         self.terminal = sys.stdout
         self.log = open(logFile, 'a')
@@ -86,7 +116,14 @@ class Logger(object):
 
 
 class EmailSender:
+    """Email Sender, send text, picture and attachment
+    """
     def __init__(self, title="Message"):
+        """init function, set some default values
+
+        Args:
+            title (str, optional): the title of the email. Defaults to "Message".
+        """
         self.mail_host = "smtp.163.com"
         self.mail_sender = "caprilovel_3@163.com"
         self.mail_license = "STSGBJYKXKCONQGP"
@@ -102,6 +139,11 @@ class EmailSender:
         self.mm["Subject"] = Header(subject_content,'utf-8')
         
     def get_text(self, text):
+        """get text, add it to email
+
+        Args:
+            text (_type_): text to be sent
+        """
         # 邮件正文内容
         body_content = text
         # 构造文本,参数1：正文内容，参数2：文本格式，参数3：编码方式
@@ -110,6 +152,11 @@ class EmailSender:
         self.mm.attach(message_text)
     
     def get_picture(self, image_data):
+        """get picture, add it to email
+
+        Args:
+            image_data (_type_): image data to be sent
+        """
         # 二进制读取图片
         # image_data = open('a.jpg','rb')
         # 设置读取获取的二进制数据
@@ -120,6 +167,11 @@ class EmailSender:
         self.mm.attach(message_image)
         
     def get_attachment(self, attachment_path):
+        """get attachment, add it to email
+
+        Args:
+            attachment_path (_type_): attachment path to be sent
+        """
         # 构造附件
         atta = MIMEText(open(attachment_path, 'rb').read(), 'base64', 'utf-8')
         # 设置附件信息
@@ -147,12 +199,29 @@ class EmailSender:
             print("error", e)
     
     def change_recerivers(self, new_receivers):
+        """change receivers
+
+        Args:
+            new_receivers (str or List[str]): new receivers
+        """
         self.mail_receivers = new_receivers
         
     def send_on_exit(self, *args, **kwargs):
+        """send email on exit
+        
+        Args:
+            *args: args
+        """
         import atexit
         atexit.register(self.send)
+        
+
 def easymail(filepath):
+    """send email with text in file
+
+    Args:
+        filepath (str): the file path
+    """
     import os
     em = EmailSender()
     try :
@@ -160,10 +229,5 @@ def easymail(filepath):
             em.get_text(" ".join(f.readlines()))
             em.send_on_exit()
     except Exception as e:
-        print(e)
-    
-# def save_model(model, path, **kwargs):
-#     ts = timestamp()
-#     save_path = os.path.join(path, ts, )
-    
+        print(e)    
     

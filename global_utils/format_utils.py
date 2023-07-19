@@ -4,6 +4,17 @@ import yaml, json
 import os 
 
 def yaml_convert_config(path):
+    """read yaml file to dict
+
+    Args:
+        path (str): yaml file path
+
+    Raises:
+        Exception: _description_
+
+    Returns:
+        dict: config dict
+    """
     if not os.path.exists(path):
         raise Exception("No such file!")
     else:
@@ -27,6 +38,17 @@ def str2bool(s:str)->bool:
     return s.lower().strip() == 'true'
 
 def boolean_string(s):
+    """_summary_
+
+    Args:
+        s (_type_): _description_
+
+    Raises:
+        ValueError: _description_
+
+    Returns:
+        _type_: _description_
+    """
     if s not in {'False', 'True'}:
         raise ValueError('Not a valid boolean string')
     return s == 'True'

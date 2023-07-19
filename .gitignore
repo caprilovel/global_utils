@@ -1,6 +1,10 @@
 .gitignore
 *.ipynb
 *.json
+__pycache__/
+.ipynb_checkpoints/
+
+
 ./*/*
 !./global_utils/*
 test/

@@ -23,9 +23,23 @@ import time
 
 
 def fuzzy_find(string, List, mode='single'):
-    '''
-    find element/elements in List which contain string
-    ''' 
+    """find element/elements in List which contain string
+    
+    fuzzy find the string in the list, return the index of the element/elements
+    
+    Args:
+        string (str): _description_
+        List (List[str]): _description_
+        mode (str, optional): _description_. Defaults to 'single'.
+
+    Raises:
+        ValueError: if mode == 'single', only one element can be found in the fuzzy find.
+        ValueError: mode must be single or multi
+
+    Returns:
+        List or int: the indexs/index of the elements/element in the Input List
+    """
+
     import re
     res = []
     for i in range(len(List)):
@@ -46,9 +60,22 @@ def fuzzy_find(string, List, mode='single'):
 
 
 def fuzzy_find_prefix(string, List, mode='single'):
-    '''
-    find element/elements in List which start with string
-    '''
+    """find element/elements in List which start with string
+    
+    fuzzy find the string in the list, return the index of the element/elements
+    
+    Args:
+        string (str): _description_
+        List (List[str]): _description_
+        mode (str, optional): single or multi, if single, only one element would be found; if multi, more than one elemnet would be found. Defaults to 'single'.
+
+    Raises:
+        ValueError: if mode == 'single', only one element can be found in the fuzzy find.
+        ValueError: mode must be single or multi
+
+    Returns:
+        List or int: the indexs/index of the elements/element in the Input List
+    """
     res = []
     for i in range(len(List)):
         if List[i].startswith(string):
@@ -66,11 +93,7 @@ def fuzzy_find_prefix(string, List, mode='single'):
         raise ValueError('mode must be single or multi')
     
     
-#-----------------------------------------------------------#
 
-#   label_select,用于样本不均衡的数据集，每一次的输入样本为每一类相同数目的样本
-
-#-----------------------------------------------------------#
 
 
 def label_select(labels, sampling):
@@ -97,66 +120,7 @@ def label_select(labels, sampling):
         sample_list.append(class_dict[i][0:sampling])
     return np.concatenate(np.array(sample_list))
 
-def tensor_predict(output):
-    '''
-    输入为batch * 预测向量,返回batch * 预测结果
-    output: tensor, size is (batch, num_classes)
-    '''
-    return output.max(1)[1].cpu().numpy()
 
-def numpy_predict(output_ndarray):
-    '''
-    output_ndarray: ndarray, size is (batch, num_classes), is the output of model 
-    '''
-    return np.argmax(output_ndarray, axis=1)
-
-def save_confusion_matrix(cm, path, title=None, labels_name=None,   cmap=plt.cm.Blues):
-
-    
-    plt.rc('font',family='Times New Roman',size='8')   # 设置字体样式、大小
-    # plt.colorbar()
-    # 按行进行归一化
-    cm = cm.astype('float') / cm.sum(axis=1)[:, np.newaxis]
-    str_cm = cm.astype(np.str).tolist()
-    for row in str_cm:
-        print('\t'.join(row))
-    for i in range(cm.shape[0]):
-        for j in range(cm.shape[1]):
-            if int(cm[i, j]*100 + 0.5) == 0:
-                cm[i, j]=0
-
-    fig, ax = plt.subplots()
-    im = ax.imshow(cm, interpolation='nearest', cmap=cmap)
-    # ax.figure.colorbar(im, ax=ax) # 侧边的颜色条带
-    
-    ax.set(xticks=np.arange(cm.shape[1]),
-           yticks=np.arange(cm.shape[0]),
-           xticklabels=labels_name, yticklabels=labels_name,
-           title=title,
-           ylabel='Actual',
-           xlabel='Predicted')
-
-    # 通过绘制格网，模拟每个单元格的边框
-    ax.set_xticks(np.arange(cm.shape[1]+1)-.5, minor=True)
-    ax.set_yticks(np.arange(cm.shape[0]+1)-.5, minor=True)
-    ax.grid(which="minor", color="gray", linestyle='-', linewidth=0.2)
-    ax.tick_params(which="minor", bottom=False, left=False)
-
-    # 将x轴上的lables旋转45度
-    plt.setp(ax.get_xticklabels(), rotation=45, ha="right",
-             rotation_mode="anchor")
-
-    # 标注百分比信息
-    fmt = 'd'
-    thresh = cm.max() / 2.
-    for i in range(cm.shape[0]):
-        for j in range(cm.shape[1]):
-            if int(cm[i, j]*100 + 0.5) > 0:
-                ax.text(j, i, format(int(cm[i, j]*100 + 0.5) , fmt) + '%',
-                        ha="center", va="center",
-                        color="white"  if cm[i, j] > thresh else "black")
-    fig.tight_layout()
-    plt.savefig(path + 'cm.jpg', dpi=300)
 
 
 #-----------------------------------------------------------#
@@ -263,53 +227,6 @@ def loaddata(filename):
     return a
 
 
-def load_raw_ts(dataset, tensor_format=True, path='data/'):
-    path = "{}raw/{}/".format(path, dataset)
-    # path = path + "Multivariate_ts" + "/"
-    # if it is npy file 
-    if os.path.exists(path+'X_train.npy'):
-        x_train = np.load(path + 'X_train.npy')
-        y_train = np.load(path + 'y_train.npy')
-        x_test = np.load(path + 'X_test.npy')
-        y_test = np.load(path + 'y_test.npy')
-        ts = np.concatenate((x_train, x_test), axis=0)
-        ts = np.transpose(ts, axes=(0, 2, 1))
-        labels = np.concatenate((y_train, y_test), axis=0)
-        nclass = int(np.amax(labels)) + 1
-
-
-        train_size = y_train.shape[0]
-
-        total_size = labels.shape[0]
-        idx_train = range(train_size)
-        idx_val = range(train_size, total_size)
-        idx_test = range(train_size, total_size)
-    # if it is ts file 
-    elif os.path.exists(path + dataset + "_TEST.ts"):
-        test_X, test_y = load_from_tsfile_to_dataframe(path+dataset+'_TEST.ts')
-        train_X, train_y = load_from_tsfile_to_dataframe(path+dataset+'_TRAIN.ts')
-        label_encoder = LabelEncoder()
-        labels = np.concatenate((np.array(label_encoder.fit_transform(train_y)),np.array(label_encoder.fit_transform(test_y))),axis=0)
-        nclass = int(np.amax(labels)) + 1 
-        train_nd = series_to_nd(train_X.values)
-        test_nd = series_to_nd(test_X.values)
-        ts = np.concatenate((train_nd,test_nd), axis=0)
-        np.transpose(ts, (0, 2, 1))
-        train_size = train_y.shape[0]
-        total_size = labels.shape[0]
-        idx_train = range(train_size)
-        idx_val = range(train_size, total_size)
-        idx_test = range(train_size, total_size)
-    if tensor_format:
-        # features = torch.FloatTensor(np.array(features))
-        ts = torch.FloatTensor(np.array(ts))
-        labels = torch.LongTensor(labels)
-
-        idx_train = torch.LongTensor(idx_train)
-        idx_val = torch.LongTensor(idx_val)
-        idx_test = torch.LongTensor(idx_test)
-
-    return ts, labels, idx_train, idx_val, idx_test, nclass
 
 
 def normalize(mx):

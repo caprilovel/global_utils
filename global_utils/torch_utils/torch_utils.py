@@ -7,6 +7,24 @@ import torch.optim as optim
 import numpy as np
 import pandas as pd
 from einops import rearrange, reduce, repeat
+import os
+import random
+
+
+def random_seed(seed=2020):
+    """to set the random seed for torch, numpy and random library
+
+    Args:
+        seed (int, optional): random seed. Defaults to 2020.
+    """
+    # determine the random seed
+    random.seed(seed)
+    # hash, save the random seed                   
+    os.environ["PYTHONHASHSEED"] = str(seed)
+    np.random.seed(seed)
+    torch.manual_seed(seed)
+    torch.cuda.manual_seed(seed)
+    torch.backends.cudnn.deterministic = True
 
 
 class MyOnehot():
@@ -15,6 +33,13 @@ class MyOnehot():
     this class is designed to transform a numpy array of labels to a onehot matrix, in sklearn library, there is a OneHotEncoder class, but it may cause the label order changed, so I write this class to avoid this problem.
     '''
     def __init__(self, labels):
+        """Myonehot init function
+
+        To form the onehot matrix, we need to know the labels, so we need to input the labels to the init function.
+        
+        Args:
+            labels (np.array): labels of the dataset
+        """
         self.labels = np.unique(labels)
         self.onehot_matrix = np.eye(len(self.labels))
         
@@ -36,6 +61,8 @@ class DefaultArgs(argparse.ArgumentParser):
     
     '''
     def __init__(self, *args, **kwargs) -> None:
+        """_summary_
+        """
         super().__init__(*args, **kwargs)
         self.add_argument('--seed', type=int, default=100, help="seed of the random")
         self.add_argument('--batch_size', type=int, default=32, help="batch size")

@@ -73,7 +73,7 @@ class SinusoidalPE(nn.Module):
         return self.dropout(X)
 
 #################    RoPE    ################
-
+# todo: RoPE
 class RoPE(nn.Module):
     def __init__(self) -> None:
         super().__init__()

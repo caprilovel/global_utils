@@ -1,5 +1,17 @@
 import os 
+
+__all__ = ['find_gpus']
+
+
 def find_gpus(nums=2):
+    """find the top nums free GPUs
+
+    Args:
+        nums (int, optional): the num of top free gpu. Defaults to 2.
+
+    Returns:
+        List[str]: the idx of top free gpu
+    """
     os.system("nvidia-smi -q -d Memory |grep -A5 GPU|grep Free >~/.tmp_free_gpus")
 
     with open(os.path.expanduser ('~/.tmp_free_gpus') , 'r') as lines_txt:
