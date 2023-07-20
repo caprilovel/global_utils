@@ -9,32 +9,7 @@ from email.mime.image import MIMEImage
 # 负责将多个对象集合起来
 from email.mime.multipart import MIMEMultipart
 from email.header import Header
-import os
-
-def print_args(func):
-    """wrapper for print args and kwargs
-
-    Args:
-        func (_type_): function
-        
-    Examples:
-        >>> @print_args
-        >>> def test(a,b,c):
-        >>>    pass
-        >>> test(1,2,3)
-        -------------test KWArgs---------------
-        a: 1
-        b: 2
-        c: 3
-        -------------test Args---------------
-    """
-    def wrapper(*args, **kwargs):
-        print("-------------{} KWArgs---------------".format(func.__name__))
-        for k,v in kwargs.items():
-            print("{}: {}".format(k,v))
-        print("-------------{} Args---------------".format(func.__name__))
-        return func(*args, **kwargs)
-    return wrapper
+import os, yaml
 
 def torch_log_decorator(func):
     """decorator for torch log
@@ -232,14 +207,34 @@ def easymail(filepath):
         print(e)    
 
 def yaml_decorate(path):
+    """a decorator to save args to yaml file
+
+    Args:
+        path (str): yaml file path
+
+    Examples:
+        >>> class A:
+        >>> @yaml_decorate('./config.yaml')
+        >>> def __init__(self, a, b, c):
+        >>>     pass
+    
+    """
     import yaml
     import functools
     def decorator(func):
         @functools.wraps(func)
         def wrapper(*args, **kwargs):
             result = func(*args, **kwargs)
-            
+            import inspect 
+            func_signature = inspect.signature(func)
+            func_params = list(func_signature.parameters.keys())
+
+            # Filter out parent class parameters from args
+            filtered_args = [arg for i, arg in enumerate(args) if func_params[i] not in kwargs]
+            if func_params[0] == 'self':
+                filtered_args = filtered_args[1:]
             params = {
+                'args': filtered_args,
                 'kwargs': kwargs,
             }
 
