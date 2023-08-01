@@ -7,7 +7,7 @@ import pandas as pd
 from einops import rearrange, reduce, repeat
 
 
-#################    ALiBi    ################
+
 class AttnwithLinearBiases(nn.Module):
     """AttnwithLinearBiases adds linear biases to attention scores.
 
@@ -27,13 +27,40 @@ class AttnwithLinearBiases(nn.Module):
         m = calculate_m(heads)
         m = m.unsqueeze(-1).unsqueeze(-1)
         bias_matrix = m * repeat(bias_matrix, 'i j -> h i j', h=heads)
-        self.bias_matrix = nn.Parameter(bias_matrix, requires_grad=False)
+        # self.bias_matrix = nn.Parameter(bias_matrix, requires_grad=False)
         
+        self.register_buffer('bias_matrix', bias_matrix) 
     def forward(self, attn_score):
-        
         return attn_score - self.bias_matrix.unsqueeze(0)
-        
 
+class RelativePositionEmbedding(nn.Module):
+    def __init__(self, Length, num_heads) -> None:
+        super().__init__()
+        self.Length = Length
+        
+        self.relative_position_bias_table = nn.Parameter(
+            torch.zeros((2 * Length - 1), num_heads))
+        
+        coords_l = torch.arange(Length)
+        coords = torch.stack(torch.meshgrid([coords_l], index='ij'))
+        coords_flatten = torch.flatten(coords, 1)
+        relative_coords = coords_flatten[:, :, None] - \
+            coords_flatten[:, None, :]  # 1, Wl, Wl
+        relative_coords = relative_coords.permute(
+            1, 2, 0).contiguous()  # Wl, Wl, 2
+        relative_coords[:, :, 0] += Length - \
+            1  # shift to start from 0
+        # relative_coords[:, :, 0] *= 2 * self.window_size[1] - 1
+        relative_position_index = relative_coords.sum(-1)  # Wl, Wl
+        self.register_buffer("relative_position_index",
+                             relative_position_index)
+        
+    def forward(self, attn):
+        relative_position_bias = self.relative_position_bias_table[
+            self.relative_position_index.view(-1)].view(
+                self.Length, self.Length, -1)  # Wl, Wl, nH
+        relative_position_bias = relative_position_bias.permute(2, 0, 1).contiguous()  # nH, Wl, Wl
+        return attn + relative_position_bias.unsqueeze(0)
 
 def calculate_m(heads):
     """calculate_m calculates the slopes of the linear bias, the size of the slopes is same as the number of heads, and the slopes are an isometric series associated with the number of heads.
