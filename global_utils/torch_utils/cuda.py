@@ -23,5 +23,6 @@ def find_gpus(nums=2):
                     for idx_memory_pair in idx_freeMemory_pair[:nums] ]
     usingGPUs =  ','.join(usingGPUs)
     print('using GPU idx: #', usingGPUs)
+    os.environ["CUDA_VISIBLE_DEVICES"] = usingGPUs
     return usingGPUs
 

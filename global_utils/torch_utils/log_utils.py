@@ -63,7 +63,7 @@ class Logger(object):
 
     stdout will first be redirected to this logger, then the log will be saved to a file. the `start_capture` and `stop_capture` function is used to control the redirection. 
     """
-    def __init__(self, logFile='./Default.log'):
+    def __init__(self, logFile=None):
         """init function, set the log file path
 
         Args:
@@ -72,7 +72,7 @@ class Logger(object):
         self.terminal = sys.stdout
         self.log = ''
         self.close_flag = False
-        self.logFile = logFile
+        self.logFile = logFile or os.path.join(os.path.dirname(os.path.abspath(sys.argv[0])), 'log/', get_time_str() + '.log')
         open(self.logFile, 'w').close
     
     def start_capture(self):
@@ -103,6 +103,11 @@ class Logger(object):
         """
         self.terminal.flush()
 
+def ez_logger(path=None):
+    if path == None:
+        path = os.path.join(os.path.dirname(os.path.abspath(sys.argv[0])), 'log/', get_time_str() + '.log')
+    log = Logger(path)
+    log.start_capture()
 
 class EmailSender:
     """Email Sender, send text, picture and attachment
@@ -342,7 +347,7 @@ def train_log(log_name=None):
             log.start_capture()
             result = func(*args, **kwargs)
             log.stop_capture()
-            easymail(os.path.join(log_path, log_file))
+            # easymail(os.path.join(log_path, log_file))
             return result
         return wrapper
     return decorator
